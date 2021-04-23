@@ -186,7 +186,7 @@ def map₂ {a b :Type} (g : a → b) : list a → list b := foldr ((::) ∘ g) [
 #reduce sum₁ [0,1,2,3]
 #reduce foldr (λ x y, x + y) 0 [1,2,3]
 #reduce map (λ x : ℕ, x + 1) [1,2,3]
-#reduce reverse [1,2,3]
+-- #reduce reverse [1,2,3]
 #reduce filter (λ x, if x < 4 then tt else ff) [1,2,3,4]
 
 
@@ -252,8 +252,8 @@ theorem funsion_law {a b : Type} (f : a → b) (g : b → a → a) (h : b → b 
 begin
  funext xs,
  induction xs with d hd, 
- rw foldr, rw comp, dsimp, rw foldr, exact h1, 
- sorry
+ rw foldr, rw comp, dsimp, rw foldr, exact h1,
+ rw foldr, norm_num, rw foldr, rw h2, rw← xs_ih,
 end
 
 
@@ -261,13 +261,23 @@ lemma funsion1 {α β : Type} (a : α)
  (f :  β → α → α) (h : α → α → α) (g : α → β) 
  (h1 : foldr f a [] = a)
  (h2 : ∀ x y, foldr f a (((::) ∘ g) x y) = h x (foldr f a y))
- : foldr f a ∘ map₁ g = foldr h a := sorry
+ : foldr f a ∘ map₁ g = foldr h a :=
+begin
+  rw map₁, rw funsion_law, exact h1, exact h2,
+end
 
 
-example {a : Type} (xs : list ℕ) : (double ∘ sum₂) xs = foldr ((+) ∘ double) 0 xs := sorry
+example {a : Type} (xs : list ℕ) : (double ∘ sum₂) xs = foldr ((+) ∘ double) 0 xs :=
+begin
+  rw sum₂, rw funsion_law, rw double, norm_num,
+  -- double (x + y) = double x + double y
+  intros, rw double, rw double, rw double, finish
+end
 
-example {a : Type} (xs : list a) : (length ∘ concat) = foldr ((+) ∘ length) 0 := sorry
-
+example {a : Type} (xs : list a) : (length ∘ concat) = foldr ((+) ∘ length) 0 := 
+begin
+  funext, norm_num, rw concat, rw length, rw funsion_law, 
+end
 
 end Fusion
 
@@ -291,7 +301,17 @@ def reverse₂ {a : Type} := foldl (flip (::)) ([] : list a)
 #reduce reverse₁ [1,2,3,4]
 
 
-example : ∀ xs : list ℕ, reverse₁ xs = reverse₂ xs := sorry
+example : ∀ xs : list ℕ, reverse₁ xs = reverse₂ xs :=
+begin
+  intro,
+  rw reverse₂,
+  induction xs with d hd,
+  rw foldl, rw reverse₁,
+  rw reverse₁, rw foldl, rw flip,
+  
+  
+end
+
 
 end Foldl
 
@@ -316,7 +336,10 @@ def reverse₁ { a : Type } : list a -> list a
 
 -- completar tipos e condicoes extras
 
-example : foldl f e xs = foldr (flip f) e (reverse₁ xs) := sorry
+example : foldl f e xs = foldr (flip f) e (reverse₁ xs) :=
+begin
+  
+end
 
 end ExercicioF
 
