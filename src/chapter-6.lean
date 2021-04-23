@@ -66,7 +66,7 @@ example {a : Type} {xs ys zs : list a} : (xs ++ ys) ++ zs = xs ++ (ys ++ zs) :=
 begin
  induction xs with b hb,
  apply list.append.equations._eqn_1,
- sorry
+ rw list.append_assoc,
 end
 
 def map {a b : Type} : (a → b) → list a → list b
@@ -177,6 +177,8 @@ def filter {a : Type} : (a → bool) → list a → list a
  | p []         := []
  | p (x :: xs)  := if (p x) then (x :: filter p xs) else filter p xs
 
+def sum₂  : list ℕ → ℕ  := foldr (+) 0
+def map₂ {a b :Type} (g : a → b) : list a → list b := foldr ((::) ∘ g) []
 
 -- tests
 
@@ -188,20 +190,39 @@ def filter {a : Type} : (a → bool) → list a → list a
 #reduce filter (λ x, if x < 4 then tt else ff) [1,2,3,4]
 
 
-theorem sum'_eq_sum'' {xs : list ℕ} : sum₁ xs = sum₂ xs := sorry
+theorem sum'_eq_sum'' {xs : list ℕ} : sum₁ xs = sum₂ xs :=
+begin
+  rw sum₂,
+  induction xs with b hb,
+  rw sum₁, rw foldr, -- Passo inicial
+  rw sum₁, rw foldr, rw xs_ih -- Passo indutivo
+end
 
-
-theorem sum_of_append {xs ys : list ℕ} : sum₁ (xs ++ ys) = sum₁ xs + sum₁ ys := sorry
-
+theorem sum_of_append {xs ys : list ℕ} : sum₁ (xs ++ ys) = sum₁ xs + sum₁ ys :=
+begin
+  induction xs with b hb,
+  rw list.nil_append, rw sum₁, rw zero_add, -- Passo inicial
+  rw list.cons_append, rw sum₁, rw xs_ih, rw sum₁, rw add_assoc -- Passo indutivo
+end
 
 theorem concat_of_apend { a : Type} {xss yss : list (list a)} : 
-  concat (xss ++ yss) = concat xss ++ concat yss := sorry
+  concat (xss ++ yss) = concat xss ++ concat yss :=
+begin
+  induction xss with b hb,
+  rw concat, rw list.nil_append, rw list.nil_append, -- Passo inicial
+  rw list.cons_append, rw concat, rw xss_ih, rw concat, rw list.append_assoc, -- Passo indutivo
+end
 
 
 theorem foldr_law {a b : Type} (f : a → b → b) (g : b → b → b) (e : b) (xs ys : list a) 
   (h1 : ∀ x, g e x = x) 
   (h2 : ∀ x y z, f x (g y z) = g (f x y) z) : 
-  foldr f e (xs ++ ys) = g (foldr f e xs) (foldr f e ys) := sorry
+  foldr f e (xs ++ ys) = g (foldr f e xs) (foldr f e ys) :=
+begin
+  induction xs with b hb,
+  rw foldr, rw list.nil_append, rw h1, -- Passo inicial
+  rw list.cons_append, rw foldr, rw xs_ih, rw h2, rw foldr,  -- Passo indutivo
+end
 
 end Foldr
 
